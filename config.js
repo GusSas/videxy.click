@@ -8,6 +8,6 @@ const CONFIG = {
 
 
 
-    // URL CDN Cloudflare R2 (Baru)
-    R2_PUBLIC_URL: 'pub-1880d72cd0f343999d3197d949ff8213.r2.dev'
+    // URL CDN Cloudflare R2
+    R2_PUBLIC_URL: 'cdn.videxy.click'
 };
