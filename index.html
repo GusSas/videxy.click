@@ -118,7 +118,15 @@
             z-index: 5
         }
 
-
+        .overlay-transparent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            cursor: pointer
+        }
 
 
         .overlay-fake {
@@ -656,7 +664,7 @@
                 <div id="status-message"><span>Sedang memuat video...</span></div>
                 <div id="video-container" style="display:none"><video id="main-video" controls playsinline
                         preload="auto"></video></div>
-
+                <div id="overlay-layer-1" class="overlay-transparent"></div>
             </div>
             <section class="recommendations-section" id="recommendations-section" style="display:none">
                 <h2>Rekomendasi Video Lainnya</h2>
