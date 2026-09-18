@@ -35,8 +35,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (landingPageEl) landingPageEl.style.display = 'flex';
         if (playerPageEl) playerPageEl.style.display = 'none';
 
-        // Aktifkan Smart Link pada interaksi tombol di Landing Page
-        setupLandingPageAds();
         return;
     } else {
         // Tampilkan Player Page
@@ -44,9 +42,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (playerPageEl) playerPageEl.style.display = 'flex';
     }
 
-    // Sembunyikan overlay dulu sampai player siap
-    const overlay1 = document.getElementById('overlay-layer-1');
-    if (overlay1) overlay1.style.display = 'none';
+
 
     try {
         // FETCH DATA VIDEO DARI API PUSAT
@@ -129,42 +125,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             downloadBtn.setAttribute('download', '');
             downloadBtn.style.display = 'inline-block';
 
-            // Event klik button download untuk memicu Smart Link Monetag
-            downloadBtn.addEventListener('click', function () {
-                triggerSmartLink(false);
-            });
+
         }
 
         statusEl.style.display = 'none';
         if (videoContainer) videoContainer.style.display = 'block';
 
-        // Tampilkan overlay selalu (pancingan agresif untuk play pertama)
-        if (overlay1) {
-            overlay1.style.display = 'flex';
-        }
 
-        // Event listener saat user pause dari kontrol bawaan HTML5 atau drag timeline (seeking)
-        if (mainVideo) {
-            mainVideo.addEventListener('pause', function () {
-                if (overlay1) overlay1.style.display = 'flex';
-                // Trigger Smart Link ketika pause
-                triggerSmartLink(false);
-            });
-
-            mainVideo.addEventListener('play', function () {
-                if (overlay1) overlay1.style.display = 'none';
-                // Trigger Smart Link ketika play
-                triggerSmartLink(false);
-            });
-
-            mainVideo.addEventListener('seeking', function () {
-                // Trigger Smart Link ketika drag timeline
-                triggerSmartLink(false);
-            });
-        }
-
-        // Setup klik overlay (play awal)
-        setupAdOverlays(mainVideo);
 
         // Fetch Recommendations
         fetchRecommendations(1);
@@ -177,67 +144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
-// ==========================================
-// SMART LINK MONETAG HELPER
-// ==========================================
-let lastSmartLinkTrigger = 0;
 
-function getSmartLinkUrl() {
-    return CONFIG.MONETAG_SMARTLINK_URL || CONFIG.CLIENT_POPUNDER_URL || '';
-}
-
-function triggerSmartLink(allowRedirect = false) {
-    const url = getSmartLinkUrl();
-    if (!url) {
-        console.warn('[Monetag] URL Smart Link belum diisi di config.js.');
-        return;
-    }
-
-    // Cooldown 1 detik agar tidak membuka terlalu banyak popup sekaligus
-    const now = Date.now();
-    if (now - lastSmartLinkTrigger < 1000) return;
-    lastSmartLinkTrigger = now;
-
-    try {
-        console.log('[Monetag] Membuka Smart Link:', url);
-        const popWin = window.open(url, '_blank');
-        if (!popWin && allowRedirect) {
-            window.location.href = url;
-        }
-    } catch (err) {
-        console.error('[Monetag] Gagal membuka Smart Link:', err);
-    }
-}
-
-// Alias untuk kompatibilitas
-function triggerPopunder(url, allowRedirect = true) {
-    triggerSmartLink(allowRedirect);
-}
-
-function setupAdOverlays(mainVideo) {
-    const overlay1 = document.getElementById('overlay-layer-1');
-
-    if (overlay1) {
-        overlay1.addEventListener('click', function (e) {
-            triggerSmartLink(false);
-            overlay1.style.display = 'none'; // Sembunyikan overlay
-
-            // Coba mainkan video otomatis
-            if (mainVideo) {
-                mainVideo.play().catch(err => console.log('Auto-play gagal:', err));
-            }
-        });
-    }
-}
-
-// Setup iklan di Landing Page (jika dibuka tanpa parameter video)
-function setupLandingPageAds() {
-    document.querySelectorAll('#landing-page a, #landing-page button').forEach(el => {
-        el.addEventListener('click', function () {
-            triggerSmartLink(false);
-        });
-    });
-}
 
 // ==========================================
 // RECOMMENDATIONS LOGIC
@@ -272,11 +179,9 @@ async function fetchRecommendations(page) {
             nextBtn.disabled = recCurrentPage >= totalPages;
 
             prevBtn.onclick = () => {
-                triggerSmartLink(false);
                 fetchRecommendations(recCurrentPage - 1);
             };
             nextBtn.onclick = () => {
-                triggerSmartLink(false);
                 fetchRecommendations(recCurrentPage + 1);
             };
         } else {
@@ -307,15 +212,7 @@ function renderRecommendations(videos) {
         card.href = `?v=${video.slug}`;
         card.className = 'rec-card';
 
-        // Event click untuk mentrigger Smart Link Monetag
-        card.addEventListener('click', function (e) {
-            e.preventDefault();
-            triggerSmartLink(false);
-            // Delay 100ms agar browser memproses pembukaan tab iklan sebelum redirect
-            setTimeout(() => {
-                window.location.href = card.href;
-            }, 100);
-        });
+
 
         card.innerHTML = `
             <img src="${thumbUrl}" alt="${video.title}" class="rec-thumb" loading="lazy" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZmlsbD0iIzk5OSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
